@@ -1,0 +1,27 @@
+{
+  "name": "textmining",
+  "version": "1.0.0",
+  "description": "A set of tools for mining and performing text analysis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:protozoo/textmining.git"
+  },
+  "keywords": [
+    "text",
+    "minin",
+    "textual",
+    "analysis",
+    "words",
+    "string"
+  ],
+  "author": "Daniel Aguilar <dani@protozoo.com> (http://www.protozoo.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/protozoo/textmining/issues"
+  },
+  "homepage": "https://github.com/protozoo/textmining"
+}
