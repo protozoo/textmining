@@ -1,6 +1,4 @@
-exports.version = function(){
-  console.log( "1.0.2" );
-}
+
 
 /**
  * Removes frequent (and probably norelevant) words from a given text
