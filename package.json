@@ -1,6 +1,6 @@
 {
   "name": "textmining",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A set of tools for mining and performing text analysis",
   "main": "index.js",
   "scripts": {
