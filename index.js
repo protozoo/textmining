@@ -82,6 +82,72 @@ exports.getTermsFrequency = function( document, normalize ){
 
 }
 
+exports.trim = function( str ){
+    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+/**
+ * extracts list of words from a string
+ * This is mostly a dummy function to match the method signature of another framework.
+ * That's why we don't use most of the arguments
+ */
+exports.getWords = function( string, withoutRepetitions, stopWords, sortedByFrequency, includeLinks, limit, minSizeWords ){
+  var rawWords = string.split( " " );
+  var result = rawWords.filter( function( d ){
+    var isLongEnough = minSizeWords == undefined || minSizeWords == 0 || d.length >= minSizeWords;
+    return isLongEnough;
+  } );
+  return result;
+}
+
+exports.getNgrams = function( sentences, maxN ){
+    var ngrams_obj = {};
+    var ngrams = [];
+    // Normalize sentences
+    sentences.forEach( function( sentence, i ){
+        sentences[i] = exports.normalize( sentence );
+        sentences[i] = exports.trim( sentences[i] );
+    });
+    
+    console.log( "num sentences: " + sentences.length );
+    // get ngrams
+    sentences.forEach( function( sentence, index ){
+        var words = exports.getWords( sentence, null, null, null, null, null, 3 );
+        for( var j=0; j<words.length; j++ ){
+          // 1-gram
+            var ngram_str = words[j];
+            if( ngrams_obj[ngram_str] == undefined ){
+                ngrams_obj[ngram_str] = { term:ngram_str, frequency:0, sentencesIndex:[], sentencesIndexDict:{} };
+                ngrams.push( ngrams_obj[ngram_str] );
+            }
+            ngrams_obj[ngram_str].frequency++;
+            // add sentence to n-gram's list, if not already present
+            if( ngrams_obj[ngram_str].sentencesIndexDict[index] != true ){
+              ngrams_obj[ngram_str].sentencesIndexDict[index] = true;
+              ngrams_obj[ngram_str].sentencesIndex.push( index );
+            }
+            // n-gram
+            var ngram = [words[j]];
+            for( var k=j+1; k<Math.min( j+maxN, words.length); k++ ){
+                ngram.push( words[k] );
+                var ngram_str = ngram.join( " " );
+                if( ngrams_obj[ngram_str] == undefined ){
+                  ngrams_obj[ngram_str] = { term:ngram_str, frequency:0, sentencesIndex:[], sentencesIndexDict:{} };
+                  ngrams.push( ngrams_obj[ngram_str] );
+                }
+                ngrams_obj[ngram_str].frequency++;
+                // add sentence to n-gram's list, if not already present
+                if( ngrams_obj[ngram_str].sentencesIndexDict[index] != true ){
+                  ngrams_obj[ngram_str].sentencesIndexDict[index] = true;
+                  ngrams_obj[ngram_str].sentencesIndex.push( index );
+                }
+            }
+        }
+    });
+    return ngrams;
+    
+}
+
 /**
  * Creates a "Bag Of Words" (BOW) model from a document corpus, 
  * including Term Frequency, Inverse Document Frequency (IDF) also known as Sparseness, and the product of these two (TFIDF)
@@ -108,7 +174,11 @@ exports.bagOfWords = function( documents, normalizeDocuments, removeStopWords ){
       normalized_text: clean_doc_in
     }
     // Comput terms for this document
-    doc_out.terms = exports.getTermsFrequency( clean_doc_in );
+    //doc_out.terms = exports.getTermsFrequency( clean_doc_in );
+    //var sentences =  clean_doc_in.match( /[^\.!\?]+[\.!\?]+/g );
+    var sentences = doc_out.sentences = clean_doc_in.match( /[^\.!\?]+[\.!\?]+/g );
+    doc_out.terms = exports.getNgrams( sentences, 4 );
+
 
     // Save document
     bag.documents.push( doc_out );
@@ -148,6 +218,27 @@ exports.bagOfWords = function( documents, normalizeDocuments, removeStopWords ){
     }
   };
 
+  // sort terms by tfdif within each doc
+  for (var i = 0; i < bag.documents.length; i++) {
+    var document = bag.documents[i];
+    var doc_terms = document.terms;
+    document.terms = document.terms.sort( function(a,b){
+      if( a.tfidf < b.tfidf )
+        return 1;
+      if( a.tfidf > b.tfidf )
+        return -1;
+      return 0;
+    } )
+  };
+
+  // sort globalterms
+  bag.terms = bag.terms.sort( function(a,b){
+      if( a.frequency < b.frequency )
+        return 1;
+      if( a.frequency > b.frequency )
+        return -1;
+      return 0;
+    } );
 
   return bag;
 }

@@ -1,6 +1,7 @@
 // Word list source: http://xpo6.com/list-of-english-stop-words/
 exports.stopwords = {
   english: {
+    'linkurl': true, 
     'a': true, 
     'about': true, 
     'above': true, 
